@@ -1,0 +1,80 @@
+{
+  "name": "mvl-prototype",
+  "version": "0.0.1",
+  "description": "MVL prototype",
+  "main": "index.js",
+  "repository": "https://github.com/tv-brendan-jefferis/mvl-prototype.git",
+  "author": "tv-brendan-jefferis",
+  "license": "UNLICENSED",
+  "watch": {
+    "copy-html": {
+      "patterns": [
+        "src"
+      ],
+      "extensions": "html",
+      "quiet": true
+    }
+  },
+  "scripts": {
+    "purge": "rimraf node_modules && yarn clean && yarn install",
+    "test": "nyc ava --verbose",
+    "test:watch": "ava --verbose --watch",
+    "clean-dist": "rimraf dist && mkdir dist",
+    "copy-html": "copyfiles --up 1 src/index.html dist",
+    "copy-html:watch": "npm-watch",
+    "process-css": "postcss -c postcss.config.js -o dist/app.css",
+    "process-css:watch": "yarn run process-css -- -w",
+    "build": "rollup -c",
+    "build:watch": "yarn run build -- -w",
+    "serve": "browser-sync start -s \"dist\" \"dist\" --no-open",
+    "prestart": "npm-run-all -s clean-dist build copy-html process-css",
+    "start": "npm-run-all -p test:watch build:watch process-css:watch copy-html:watch serve"
+  },
+  "dependencies": {
+    "comp": "^1.2.0",
+    "copyfiles": "^1.0.0"
+  },
+  "devDependencies": {
+    "ava": "^0.17.0",
+    "babel-core": "5.x.x",
+    "babel-preset-es2015-rollup": "^3.0.0",
+    "babel-preset-latest": "^6.16.0",
+    "browser-env": "^2.0.19",
+    "browser-sync": "~2.12.1",
+    "chalk": "^1.1.3",
+    "cssnano": "^3.10.0",
+    "npm-run-all": "^4.0.0",
+    "npm-watch": "^0.1.7",
+    "nyc": "^10.0.0",
+    "postcss-advanced-variables": "^1.2.2",
+    "postcss-cli": "^2.6.0",
+    "postcss-cssnext": "^2.9.0",
+    "postcss-discard-empty": "^2.1.0",
+    "postcss-merge-rules": "^2.0.11",
+    "postcss-partial-import": "^3.1.0",
+    "rimraf": "^2.5.4",
+    "rollup": "^0.39.2",
+    "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-watch": "^3.1.0"
+  },
+  "ava": {
+    "files": [
+      "src/**/*.spec.js"
+    ],
+    "source": [
+      "src/**/*.js",
+      "!dist/**/*"
+    ],
+    "require": [
+      "babel-register",
+      "./tools/helpers/setup-browser-env.js"
+    ],
+    "babel": {
+      "presets": [
+        "latest"
+      ]
+    }
+  }
+}
