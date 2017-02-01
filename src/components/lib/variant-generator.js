@@ -13,6 +13,12 @@ function setRandomOutOfStock(count, variants) {
     return variants;
 }
 
+function setRandomNull(count, variants) {
+    let randoms = uniqueRandoms(count, variants.length);
+    variants = variants.filter((v, i) => randoms.indexOf(i) === -1);
+    return variants;
+}
+
 export default function(options) {
     let randomSamples = [];
     let variants = [];
@@ -67,7 +73,13 @@ export default function(options) {
         }
     }
 
-    variants = setRandomOutOfStock(options.oosCount, variants);
+    if (options.oosCount > 0) {
+        variants = setRandomOutOfStock(options.oosCount, variants);
+    }
+
+    if (options.nullCount > 0) {
+        variants = setRandomNull(options.nullCount, variants);
+    }
 
     for (let i = 0; i < optionSets.length; i++) {
         let set = optionSets[i];

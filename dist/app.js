@@ -713,6 +713,14 @@ function setRandomOutOfStock(count, variants) {
     return variants;
 }
 
+function setRandomNull(count, variants) {
+    var randoms = uniqueRandoms(count, variants.length);
+    variants = variants.filter(function (v, i) {
+        return randoms.indexOf(i) === -1;
+    });
+    return variants;
+}
+
 var variantGenerator = function (options) {
     var randomSamples = [];
     var variants = [];
@@ -773,7 +781,13 @@ var variantGenerator = function (options) {
         }
     }
 
-    variants = setRandomOutOfStock(options.oosCount, variants);
+    if (options.oosCount > 0) {
+        variants = setRandomOutOfStock(options.oosCount, variants);
+    }
+
+    if (options.nullCount > 0) {
+        variants = setRandomNull(options.nullCount, variants);
+    }
 
     var _loop2 = function _loop2(_i) {
         var set = optionSets[_i];
@@ -835,7 +849,7 @@ var taggedTemplateLiteral = function (strings, raw) {
   }));
 };
 
-var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Out of stock count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Out of stock count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
+var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
 
 var configData = {
 
@@ -844,6 +858,7 @@ var configData = {
         optionSets: [{ optionName: "Colour", count: 3, nullCount: 0, oosCount: 0, optionValues: ["white", "silver", "gray", "black", "navy", "blue", "cerulean", "sky blue", "turquoise", "azure", "teal", "cyan", "green", "lime", "chartreuse", "olive", "yellow", "gold", "amber", "orange", "brown", "red", "maroon", "rose", "pink", "magenta", "purple", "indigo", "violet", "plum"] }, { optionName: "Size", count: 3, nullCount: 0, oosCount: 0, optionValues: ["3XS", "2XS", "XS", "M", "L", "XL", "2XL", "3L", "4XL", "5XL", "6XL", "000", "00", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"] }, { optionName: "Logo", count: 3, nullCount: 0, oosCount: 0, optionValues: ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs", "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals", "Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"] }, { optionName: "Fabric", count: 0, nullCount: 0, oosCount: 0, optionValues: ["Cotton", "Leather", "Canvas", "Sack-cloth", "Denim", "Satin", "Silk", "Suede", "Crushed velvet", "Velour", "Fishnet", "Flannel", "Wool", "Cheesecloth", "Cashmere", "Gingham", "Horsehair", "Lambswool", "Possum fur", "Feathers", "Moleskin", "Nylon", "Polyester", "Lace", "Ultrasuede", "Wolf pelt", "Spider silk", "Vegan leather", "PVC", "Twill"] }, { optionName: "Gull", count: 0, nullCount: 0, oosCount: 0, optionValues: ["Pacific gull", "Belcher gull", "Olror gull", "Black-tailed gull", "Heermann gull", "Common gull", "Ring-billed gull", "California gull", "Great black-backed gull", "Kelp gull", "Cape gull", "Glaucous-winged gull", "Western gull", "Yellow-footed gull", "Glaucous gull", "Iceland gull", "Kumlien gull", "Thayer gull", "European herring gull", "American herring gull", "Caspian gull", "Yellow-legged gull", "East Siberian herring gull", "Armenian gull", "Slaty-backed gull", "Lesser black-backed gull", "Heuglin gull", "Mediterranean gull", "White-eyed gull", "Sooty gull"] }],
         variantCount: 5,
         oosCount: 1,
+        nullCount: 0,
         variants: [],
         rulesList: ["grey-out", "disable", "exclude"],
         ruleOutOfStock: "grey-out",
@@ -902,6 +917,10 @@ var configData = {
                 var count = parseInt(val, 10);
                 model.oosCount = count <= model.variantCount ? count : model.variantCount;
             },
+            updateNullCount: function updateNullCount(val) {
+                var count = parseInt(val, 10);
+                model.nullCount = count <= model.variantCount ? count : model.variantCount;
+            },
             generateData: function generateData() {
                 var options = Object.assign({}, model);
                 options.optionSets = model.optionSets.filter(function (x) {
@@ -926,7 +945,7 @@ var configData = {
 
         return {
             render: function render(model, html) {
-                return html(_templateObject, model.sectionVisible ? "- Hide data options" : "+ Show data options", model.sectionVisible ? "" : "display: none", model.optionSets.map(renderOptionSet), model.variantCount, model.oosCount, model.variantCount, model.rulesList.map(function (x) {
+                return html(_templateObject, model.sectionVisible ? "- Hide data options" : "+ Show data options", model.sectionVisible ? "" : "display: none", model.optionSets.map(renderOptionSet), model.variantCount, model.oosCount, model.variantCount, model.nullCount, model.variantCount, model.rulesList.map(function (x) {
                     return renderRadioButtons("ruleOutOfStock", x, model.ruleOutOfStock);
                 }), model.rulesList.map(function (x) {
                     return renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant);

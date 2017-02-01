@@ -167,6 +167,7 @@ export default {
 		],
         variantCount: 5,
         oosCount: 1,
+        nullCount: 0,
         variants: [],
         rulesList: ["grey-out", "disable", "exclude"],
         ruleOutOfStock: "grey-out",
@@ -225,6 +226,10 @@ export default {
                 const count = parseInt(val, 10);
 		        model.oosCount = count <= model.variantCount ? count : model.variantCount;
             },
+            updateNullCount(val) {
+                const count = parseInt(val, 10);
+                model.nullCount = count <= model.variantCount ? count : model.variantCount;
+            },
 			generateData() {
                 const options = Object.assign({}, model);
                 options.optionSets = model.optionSets.filter(x => x.count > 0);
@@ -282,8 +287,12 @@ export default {
                                 <input data-change="updateVariantCount(this.value)" type="number" value="${model.variantCount}" min="0" max="150">
                             </p>
                             <p>
-                                <label>Out of stock count</label>
+                                <label>Random out of stock variants</label>
                                 <input data-change="updateOosCount(this.value)" type="number" value="${model.oosCount}" min="0" max="${model.variantCount}">
+                            </p>
+                            <p>
+                                <label>Random null variants</label>
+                                <input data-change="updateNullCount(this.value)" type="number" value="${model.nullCount}" min="0" max="${model.variantCount}">
                             </p>
                             <hr>
                             <h2>Rules</h2>
