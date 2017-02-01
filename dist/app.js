@@ -729,6 +729,7 @@ var variantGenerator = function (options) {
         optionSets.push({
             count: set.count,
             nullCount: set.nullCount,
+            oosCount: set.oosCount,
             optionName: set.optionName,
             optionValues: values
         });
@@ -796,6 +797,30 @@ var variantGenerator = function (options) {
         _loop2(_i);
     }
 
+    var _loop3 = function _loop3(_i2) {
+        var set = optionSets[_i2];
+        if (set.oosCount > 0) {
+            (function () {
+                var randoms = uniqueRandoms(set.oosCount, set.optionValues.length);
+                var oosOptions = randoms.map(function (i) {
+                    return set.optionValues[i];
+                });
+                variants.map(function (v) {
+                    var option = v.optionValues.find(function (o) {
+                        return o.name === set.optionName;
+                    });
+                    if (oosOptions.indexOf(option.value) !== -1) {
+                        v.quantity = 0;
+                    }
+                });
+            })();
+        }
+    };
+
+    for (var _i2 = 0; _i2 < optionSets.length; _i2++) {
+        _loop3(_i2);
+    }
+
     return {
         optionSets: optionSets,
         variants: variants
@@ -816,7 +841,7 @@ var configData = {
 
     model: {
         sectionVisible: true,
-        optionSets: [{ optionName: "Colour", count: 3, nullCount: 0, optionValues: ["white", "silver", "gray", "black", "navy", "blue", "cerulean", "sky blue", "turquoise", "azure", "teal", "cyan", "green", "lime", "chartreuse", "olive", "yellow", "gold", "amber", "orange", "brown", "red", "maroon", "rose", "pink", "magenta", "purple", "indigo", "violet", "plum"] }, { optionName: "Size", count: 3, nullCount: 0, optionValues: ["3XS", "2XS", "XS", "M", "L", "XL", "2XL", "3L", "4XL", "5XL", "6XL", "000", "00", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"] }, { optionName: "Logo", count: 3, nullCount: 0, optionValues: ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs", "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals", "Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"] }, { optionName: "Fabric", count: 0, nullCount: 0, optionValues: ["Cotton", "Leather", "Canvas", "Sack-cloth", "Denim", "Satin", "Silk", "Suede", "Crushed velvet", "Velour", "Fishnet", "Flannel", "Wool", "Cheesecloth", "Cashmere", "Gingham", "Horsehair", "Lambswool", "Possum fur", "Feathers", "Moleskin", "Nylon", "Polyester", "Lace", "Ultrasuede", "Wolf pelt", "Spider silk", "Vegan leather", "PVC", "Twill"] }, { optionName: "Gull", count: 0, nullCount: 0, optionValues: ["Pacific gull", "Belcher gull", "Olror gull", "Black-tailed gull", "Heermann gull", "Common gull", "Ring-billed gull", "California gull", "Great black-backed gull", "Kelp gull", "Cape gull", "Glaucous-winged gull", "Western gull", "Yellow-footed gull", "Glaucous gull", "Iceland gull", "Kumlien gull", "Thayer gull", "European herring gull", "American herring gull", "Caspian gull", "Yellow-legged gull", "East Siberian herring gull", "Armenian gull", "Slaty-backed gull", "Lesser black-backed gull", "Heuglin gull", "Mediterranean gull", "White-eyed gull", "Sooty gull"] }],
+        optionSets: [{ optionName: "Colour", count: 3, nullCount: 0, oosCount: 0, optionValues: ["white", "silver", "gray", "black", "navy", "blue", "cerulean", "sky blue", "turquoise", "azure", "teal", "cyan", "green", "lime", "chartreuse", "olive", "yellow", "gold", "amber", "orange", "brown", "red", "maroon", "rose", "pink", "magenta", "purple", "indigo", "violet", "plum"] }, { optionName: "Size", count: 3, nullCount: 0, oosCount: 0, optionValues: ["3XS", "2XS", "XS", "M", "L", "XL", "2XL", "3L", "4XL", "5XL", "6XL", "000", "00", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"] }, { optionName: "Logo", count: 3, nullCount: 0, oosCount: 0, optionValues: ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs", "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals", "Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"] }, { optionName: "Fabric", count: 0, nullCount: 0, oosCount: 0, optionValues: ["Cotton", "Leather", "Canvas", "Sack-cloth", "Denim", "Satin", "Silk", "Suede", "Crushed velvet", "Velour", "Fishnet", "Flannel", "Wool", "Cheesecloth", "Cashmere", "Gingham", "Horsehair", "Lambswool", "Possum fur", "Feathers", "Moleskin", "Nylon", "Polyester", "Lace", "Ultrasuede", "Wolf pelt", "Spider silk", "Vegan leather", "PVC", "Twill"] }, { optionName: "Gull", count: 0, nullCount: 0, oosCount: 0, optionValues: ["Pacific gull", "Belcher gull", "Olror gull", "Black-tailed gull", "Heermann gull", "Common gull", "Ring-billed gull", "California gull", "Great black-backed gull", "Kelp gull", "Cape gull", "Glaucous-winged gull", "Western gull", "Yellow-footed gull", "Glaucous gull", "Iceland gull", "Kumlien gull", "Thayer gull", "European herring gull", "American herring gull", "Caspian gull", "Yellow-legged gull", "East Siberian herring gull", "Armenian gull", "Slaty-backed gull", "Lesser black-backed gull", "Heuglin gull", "Mediterranean gull", "White-eyed gull", "Sooty gull"] }],
         variantCount: 5,
         oosCount: 1,
         variants: [],
@@ -853,8 +878,12 @@ var configData = {
                     }
                 });
             },
-            updateRule: function updateRule(ruleName, value) {
-                model[ruleName] = value;
+            updateOptionSetOosCount: function updateOptionSetOosCount(optionName, count) {
+                model.optionSets.map(function (x) {
+                    if (x.optionName === optionName) {
+                        x.oosCount = parseInt(count, 10);
+                    }
+                });
             },
             updateOptionSetNullCount: function updateOptionSetNullCount(optionName, count) {
                 model.optionSets.map(function (x) {
@@ -862,6 +891,9 @@ var configData = {
                         x.nullCount = parseInt(count, 10);
                     }
                 });
+            },
+            updateRule: function updateRule(ruleName, value) {
+                model[ruleName] = value;
             },
             updateVariantCount: function updateVariantCount(val) {
                 model.variantCount = parseInt(val, 10);
@@ -885,7 +917,7 @@ var configData = {
     view: function view() {
 
         function renderOptionSet(optionSet) {
-            return "\n                <div class=\"option-set\">\n                    <h4>" + optionSet.optionName + " options</h4>\n                    <p>\n                        <label>Count</label>\n                        <input data-change=\"updateOptionSetCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.count + "\" min=\"0\" max=\"30\">\n                    </p>\n                    <p>\n                        <label>Null count</label>\n                        <input data-change=\"updateOptionSetNullCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.nullCount + "\" min=\"0\" max=\"30\">\n                    </p>\n                </div>\n            ";
+            return "\n                <div class=\"option-set\">\n                    <h4>" + optionSet.optionName + " options</h4>\n                    <p>\n                        <label>Count</label>\n                        <input data-change=\"updateOptionSetCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.count + "\" min=\"0\" max=\"30\">\n                    </p>\n                    <p>\n                        <label>Out of stock</label>\n                        <input data-change=\"updateOptionSetOosCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.oosCount + "\" min=\"0\" max=\"30\">\n                    </p>\n                    <p>\n                        <label>Null</label>\n                        <input data-change=\"updateOptionSetNullCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.nullCount + "\" min=\"0\" max=\"30\">\n                    </p>\n                </div>\n            ";
         }
 
         function renderRadioButtons(listName, item, defaultValue) {

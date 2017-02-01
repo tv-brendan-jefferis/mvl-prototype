@@ -27,6 +27,7 @@ export default function(options) {
         optionSets.push({
             count: set.count,
             nullCount: set.nullCount,
+            oosCount: set.oosCount,
             optionName: set.optionName,
             optionValues: values
         });
@@ -76,7 +77,21 @@ export default function(options) {
             variants = variants.filter(v => {
                 const option = v.optionValues.find(o => o.name === set.optionName);
                 return nullOptions.indexOf(option.value) === -1;
-            })
+            });
+        }
+    }
+
+    for (let i = 0; i < optionSets.length; i++) {
+        let set = optionSets[i];
+        if (set.oosCount > 0) {
+            const randoms = uniqueRandoms(set.oosCount, set.optionValues.length);
+            const oosOptions = randoms.map(i => set.optionValues[i]);
+            variants.map(v => {
+                const option = v.optionValues.find(o => o.name === set.optionName);
+                if (oosOptions.indexOf(option.value) !== -1) {
+                    v.quantity = 0;
+                }
+            });
         }
     }
 

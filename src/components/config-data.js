@@ -6,7 +6,7 @@ export default {
 	model: {
 	    sectionVisible: true,
 		optionSets: [
-            { optionName: "Colour", count: 3, nullCount: 0, optionValues: [
+            { optionName: "Colour", count: 3, nullCount: 0, oosCount: 0, optionValues: [
                 "white",
                 "silver",
                 "gray",
@@ -37,7 +37,7 @@ export default {
                 "indigo",
                 "violet",
                 "plum"] },
-            { optionName: "Size", count: 3, nullCount: 0, optionValues: [
+            { optionName: "Size", count: 3, nullCount: 0, oosCount: 0, optionValues: [
                 "3XS",
                 "2XS",
                 "XS",
@@ -69,7 +69,7 @@ export default {
                 "30",
                 "32"
             ] },
-            { optionName: "Logo", count: 3, nullCount: 0, optionValues: [
+            { optionName: "Logo", count: 3, nullCount: 0, oosCount: 0, optionValues: [
                 "Boston Bruins",
                 "Buffalo Sabres",
                 "Detroit Red Wings",
@@ -101,7 +101,7 @@ export default {
                 "St. Louis Blues",
                 "Winnipeg Jets"
             ] },
-            { optionName: "Fabric", count: 0, nullCount: 0, optionValues: [
+            { optionName: "Fabric", count: 0, nullCount: 0, oosCount: 0, optionValues: [
                 "Cotton",
                 "Leather",
                 "Canvas",
@@ -132,7 +132,7 @@ export default {
                 "Vegan leather",
                 "PVC",
                 "Twill"] },
-            { optionName: "Gull", count: 0, nullCount: 0, optionValues: [
+            { optionName: "Gull", count: 0, nullCount: 0, oosCount: 0, optionValues: [
                 "Pacific gull",
                 "Belcher gull",
                 "Olror gull",
@@ -201,8 +201,12 @@ export default {
                     }
                 });
             },
-            updateRule(ruleName, value) {
-                model[ruleName] = value;
+            updateOptionSetOosCount(optionName, count) {
+                model.optionSets.map(x => {
+                    if (x.optionName === optionName) {
+                        x.oosCount = parseInt(count, 10);
+                    }
+                });
             },
             updateOptionSetNullCount(optionName, count) {
                 model.optionSets.map(x => {
@@ -210,6 +214,9 @@ export default {
                         x.nullCount = parseInt(count, 10);
                     }
                 });
+            },
+            updateRule(ruleName, value) {
+                model[ruleName] = value;
             },
             updateVariantCount(val) {
                 model.variantCount = parseInt(val, 10);
@@ -240,7 +247,11 @@ export default {
                         <input data-change="updateOptionSetCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.count}" min="0" max="30">
                     </p>
                     <p>
-                        <label>Null count</label>
+                        <label>Out of stock</label>
+                        <input data-change="updateOptionSetOosCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.oosCount}" min="0" max="30">
+                    </p>
+                    <p>
+                        <label>Null</label>
                         <input data-change="updateOptionSetNullCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.nullCount}" min="0" max="30">
                     </p>
                 </div>
