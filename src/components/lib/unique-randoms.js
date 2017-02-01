@@ -6,5 +6,5 @@ export default function(count, max) {
             randoms.push(rand);
         }
     }
-    return randoms;
+    return randoms.sort();
 }

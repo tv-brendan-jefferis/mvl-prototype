@@ -171,7 +171,9 @@ export default {
         variants: [],
         rulesList: ["grey-out", "disable", "exclude"],
         ruleOutOfStock: "grey-out",
-        ruleNullVariant: "grey-out"
+        ruleNullVariant: "grey-out",
+        preselectOptionsOnLoad: true,
+        preselectOutOfStock: false
 	},
 
 	actions(model) {
@@ -230,13 +232,19 @@ export default {
                 const count = parseInt(val, 10);
                 model.nullCount = count <= model.variantCount ? count : model.variantCount;
             },
+            setPreselectOptions(checked) {
+                model.preselectOptionsOnLoad = checked;
+            },
+            setPreselectOutOfStock(checked) {
+                model.preselectOutOfStock = checked;
+            },
 			generateData() {
                 const options = Object.assign({}, model);
                 options.optionSets = model.optionSets.filter(x => x.count > 0);
                 const data = variantGenerator(options);
                 model.variants = data.variants;
                 let optionSets = data.optionSets.map(optionValueToSelectListItem);
-                comp.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant);
+                comp.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant, model.preselectOptionsOnLoad, model.preselectOutOfStock);
 			} 
 		}
 	},
@@ -306,6 +314,10 @@ export default {
                                     ${model.rulesList.map(x => renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant)) }
                                 </div>
                             </div>
+                            <input type="checkbox" data-change="setPreselectOptions(this.checked)" id="preselect-options" ${model.preselectOptionsOnLoad ? "checked" : ""}>
+                            <label for="preselect-options">Pre-select options on load</label>
+                            <input type="checkbox" data-change="setPreselectOutOfStock(this.checked)" id="preselect-out-of-stock" ${model.preselectOutOfStock ? "checked" : ""}>
+                            <label for="preselect-out-of-stock">Pre-select out of stock variant</label>
                             <hr>
                             <button data-click="generateData" type="button">Generate data</button>
                         </div>
