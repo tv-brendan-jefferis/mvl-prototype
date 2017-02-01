@@ -1,3 +1,5 @@
+import uniqueRandoms from "./unique-randoms";
+
 function optionValues(o) {
     return {
         name: o.name,
@@ -6,59 +8,80 @@ function optionValues(o) {
 }
 
 function setRandomOutOfStock(count, variants) {
-    for (let i = 0; i <= count; i++) {
-        const rand = Math.floor(Math.random() * variants.length);
-        variants[rand].quantity = 0;
-    }
+    let randoms = uniqueRandoms(count, variants.length);
+    randoms.map(i => { variants[i].quantity = 0 });
     return variants;
 }
 
-
-// const optionSets = [
-//     { optionName: "Colour", count: 3, foosCount: 0, optionValues: ["white","silver","gray"] },
-// ];
-
 export default function(options) {
+    let randomSamples = [];
     let variants = [];
-    let output = [];
     let counter = 0;
     let usedSkus = {};
+    let optionSets = [];
+
+    for (let i = 0; i < options.optionSets.length; i++) {
+        const set = options.optionSets[i];
+        const randoms = uniqueRandoms(set.count, set.optionValues.length);
+        const values = randoms.map(i => set.optionValues[i]);
+        optionSets.push({
+            count: set.count,
+            nullCount: set.nullCount,
+            optionName: set.optionName,
+            optionValues: values
+        });
+    }
 
     for (let i = 0; i < 5000; i++) {
-        variants.push({
+        randomSamples.push({
             sku: '',
             optionValues: [],
             price: parseFloat((10 + Math.random() * 10).toFixed(2)),
             quantity: 1 + Math.floor((Math.random() * 30))
         });
 
-        for (let j = 0; j < 3; j++) {
-            const random = Math.floor(Math.random() * options.optionSets[j].optionValues.length);
-            const neo = options.optionSets[j].optionValues[random];
+        for (let j = 0; j < optionSets.length; j++) {
+            const random = Math.floor(Math.random() * optionSets[j].optionValues.length);
+            const neo = optionSets[j].optionValues[random];
 
-            variants[i].optionValues.push({
-                name: options.optionSets[j].optionName,
+            randomSamples[i].optionValues.push({
+                name: optionSets[j].optionName,
                 value: neo
             });
 
-            variants[i].sku += neo + '-';
+            randomSamples[i].sku += neo.replace(" ", "_") + '-';
         }
 
-        if (!usedSkus[variants[i].sku] && counter < options.variantCount) {
-            const v = variants[i];
-            output.push({
+        if (!usedSkus[randomSamples[i].sku] && counter < options.variantCount) {
+            const v = randomSamples[i];
+            variants.push({
                 sku: v.sku,
                 price: v.price,
                 quantity: v.quantity,
                 optionValues: v.optionValues.map(optionValues)
             });
 
-            usedSkus[variants[i].sku] = true;
+            usedSkus[randomSamples[i].sku] = true;
             counter++;
         }
     }
 
-    output = setRandomOutOfStock(options.oosCount, output);
+    variants = setRandomOutOfStock(options.oosCount, variants);
 
-    return output;
+    for (let i = 0; i < optionSets.length; i++) {
+        let set = optionSets[i];
+        if (set.nullCount > 0) {
+            const randoms = uniqueRandoms(set.nullCount, set.optionValues.length);
+            const nullOptions = randoms.map(i => set.optionValues[i]);
+            variants = variants.filter(v => {
+                const option = v.optionValues.find(o => o.name === set.optionName);
+                return nullOptions.indexOf(option.value) === -1;
+            })
+        }
+    }
+
+    return {
+        optionSets: optionSets,
+        variants: variants
+    };
 }

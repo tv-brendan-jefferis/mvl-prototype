@@ -687,6 +687,17 @@ return comp;
 
 var comp$1 = unwrapExports(comp);
 
+var uniqueRandoms = function (count, max) {
+    var randoms = [];
+    while (randoms.length !== count) {
+        var rand = Math.floor(Math.random() * max);
+        if (randoms.indexOf(rand) === -1) {
+            randoms.push(rand);
+        }
+    }
+    return randoms;
+};
+
 function optionValues(o) {
     return {
         name: o.name,
@@ -695,60 +706,100 @@ function optionValues(o) {
 }
 
 function setRandomOutOfStock(count, variants) {
-    for (var i = 0; i <= count; i++) {
-        var rand = Math.floor(Math.random() * variants.length);
-        variants[rand].quantity = 0;
-    }
+    var randoms = uniqueRandoms(count, variants.length);
+    randoms.map(function (i) {
+        variants[i].quantity = 0;
+    });
     return variants;
 }
 
-// const optionSets = [
-//     { optionName: "Colour", count: 3, foosCount: 0, optionValues: ["white","silver","gray"] },
-// ];
-
 var variantGenerator = function (options) {
+    var randomSamples = [];
     var variants = [];
-    var output = [];
     var counter = 0;
     var usedSkus = {};
+    var optionSets = [];
+
+    var _loop = function _loop(i) {
+        var set = options.optionSets[i];
+        var randoms = uniqueRandoms(set.count, set.optionValues.length);
+        var values = randoms.map(function (i) {
+            return set.optionValues[i];
+        });
+        optionSets.push({
+            count: set.count,
+            nullCount: set.nullCount,
+            optionName: set.optionName,
+            optionValues: values
+        });
+    };
+
+    for (var i = 0; i < options.optionSets.length; i++) {
+        _loop(i);
+    }
 
     for (var i = 0; i < 5000; i++) {
-        variants.push({
+        randomSamples.push({
             sku: '',
             optionValues: [],
             price: parseFloat((10 + Math.random() * 10).toFixed(2)),
             quantity: 1 + Math.floor(Math.random() * 30)
         });
 
-        for (var j = 0; j < 3; j++) {
-            var random = Math.floor(Math.random() * options.optionSets[j].optionValues.length);
-            var neo = options.optionSets[j].optionValues[random];
+        for (var j = 0; j < optionSets.length; j++) {
+            var random = Math.floor(Math.random() * optionSets[j].optionValues.length);
+            var neo = optionSets[j].optionValues[random];
 
-            variants[i].optionValues.push({
-                name: options.optionSets[j].optionName,
+            randomSamples[i].optionValues.push({
+                name: optionSets[j].optionName,
                 value: neo
             });
 
-            variants[i].sku += neo + '-';
+            randomSamples[i].sku += neo.replace(" ", "_") + '-';
         }
 
-        if (!usedSkus[variants[i].sku] && counter < options.variantCount) {
-            var v = variants[i];
-            output.push({
+        if (!usedSkus[randomSamples[i].sku] && counter < options.variantCount) {
+            var v = randomSamples[i];
+            variants.push({
                 sku: v.sku,
                 price: v.price,
                 quantity: v.quantity,
                 optionValues: v.optionValues.map(optionValues)
             });
 
-            usedSkus[variants[i].sku] = true;
+            usedSkus[randomSamples[i].sku] = true;
             counter++;
         }
     }
 
-    output = setRandomOutOfStock(options.oosCount, output);
+    variants = setRandomOutOfStock(options.oosCount, variants);
 
-    return output;
+    var _loop2 = function _loop2(_i) {
+        var set = optionSets[_i];
+        if (set.nullCount > 0) {
+            (function () {
+                var randoms = uniqueRandoms(set.nullCount, set.optionValues.length);
+                var nullOptions = randoms.map(function (i) {
+                    return set.optionValues[i];
+                });
+                variants = variants.filter(function (v) {
+                    var option = v.optionValues.find(function (o) {
+                        return o.name === set.optionName;
+                    });
+                    return nullOptions.indexOf(option.value) === -1;
+                });
+            })();
+        }
+    };
+
+    for (var _i = 0; _i < optionSets.length; _i++) {
+        _loop2(_i);
+    }
+
+    return {
+        optionSets: optionSets,
+        variants: variants
+    };
 };
 
 var taggedTemplateLiteral = function (strings, raw) {
@@ -759,31 +810,59 @@ var taggedTemplateLiteral = function (strings, raw) {
   }));
 };
 
-var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>oos count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>oos count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
+var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Out of stock count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Out of stock count</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
 
 var configData = {
 
     model: {
         sectionVisible: true,
-        optionSets: [{ optionName: "Colour", count: 3, foosCount: 0, optionValues: ["white", "silver", "gray", "black", "navy", "blue", "cerulean", "sky blue", "turquoise", "azure", "teal", "cyan", "green", "lime", "chartreuse", "olive", "yellow", "gold", "amber", "orange", "brown", "red", "maroon", "rose", "pink", "magenta", "purple", "indigo", "violet", "plum"] }, { optionName: "Size", count: 3, foosCount: 0, optionValues: ["3XS", "2XS", "XS", "M", "L", "XL", "2XL", "3L", "4XL", "5XL", "6XL", "000", "00", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"] }, { optionName: "Logo", count: 3, foosCount: 0, optionValues: ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs", "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals", "Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"] }],
+        optionSets: [{ optionName: "Colour", count: 3, nullCount: 0, optionValues: ["white", "silver", "gray", "black", "navy", "blue", "cerulean", "sky blue", "turquoise", "azure", "teal", "cyan", "green", "lime", "chartreuse", "olive", "yellow", "gold", "amber", "orange", "brown", "red", "maroon", "rose", "pink", "magenta", "purple", "indigo", "violet", "plum"] }, { optionName: "Size", count: 3, nullCount: 0, optionValues: ["3XS", "2XS", "XS", "M", "L", "XL", "2XL", "3L", "4XL", "5XL", "6XL", "000", "00", "0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32"] }, { optionName: "Logo", count: 3, nullCount: 0, optionValues: ["Boston Bruins", "Buffalo Sabres", "Detroit Red Wings", "Florida Panthers", "Montreal Canadiens", "Ottawa Senators", "Tampa Bay Lightning", "Toronto Maple Leafs", "Carolina Hurricanes", "Columbus Blue Jackets", "New Jersey Devils", "New York Islanders", "New York Rangers", "Philadelphia Flyers", "Pittsburgh Penguins", "Washington Capitals", "Anaheim Ducks", "Arizona Coyotes", "Calgary Flames", "Edmonton Oilers", "Los Angeles Kings", "San Jose Sharks", "Vancouver Canucks", "Chicago Blackhawks", "Colorado Avalanche", "Dallas Stars", "Minnesota Wild", "Nashville Predators", "St. Louis Blues", "Winnipeg Jets"] }, { optionName: "Fabric", count: 0, nullCount: 0, optionValues: ["Cotton", "Leather", "Canvas", "Sack-cloth", "Denim", "Satin", "Silk", "Suede", "Crushed velvet", "Velour", "Fishnet", "Flannel", "Wool", "Cheesecloth", "Cashmere", "Gingham", "Horsehair", "Lambswool", "Possum fur", "Feathers", "Moleskin", "Nylon", "Polyester", "Lace", "Ultrasuede", "Wolf pelt", "Spider silk", "Vegan leather", "PVC", "Twill"] }, { optionName: "Gull", count: 0, nullCount: 0, optionValues: ["Pacific gull", "Belcher gull", "Olror gull", "Black-tailed gull", "Heermann gull", "Common gull", "Ring-billed gull", "California gull", "Great black-backed gull", "Kelp gull", "Cape gull", "Glaucous-winged gull", "Western gull", "Yellow-footed gull", "Glaucous gull", "Iceland gull", "Kumlien gull", "Thayer gull", "European herring gull", "American herring gull", "Caspian gull", "Yellow-legged gull", "East Siberian herring gull", "Armenian gull", "Slaty-backed gull", "Lesser black-backed gull", "Heuglin gull", "Mediterranean gull", "White-eyed gull", "Sooty gull"] }],
         variantCount: 5,
-        oosCount: 0,
+        oosCount: 1,
         variants: [],
-        ruleOutOfStock: ["exclude", "disable", "grey-out"],
-        ruleNullVariant: ["exclude", "disable", "grey-out"]
+        rulesList: ["grey-out", "disable", "exclude"],
+        ruleOutOfStock: "grey-out",
+        ruleNullVariant: "grey-out"
     },
 
     actions: function actions(model) {
+
+        function optionValueToSelectListItem(optionSet) {
+            var optionValues = [];
+
+            for (var i = 0; i < optionSet.optionValues.length; i++) {
+                optionValues.push({
+                    name: optionSet.optionValues[i]
+                });
+            }
+
+            return {
+                optionName: optionSet.optionName,
+                optionValues: optionValues
+            };
+        }
 
         return {
             toggleSectionVisible: function toggleSectionVisible() {
                 model.sectionVisible = !model.sectionVisible;
             },
             updateOptionSetCount: function updateOptionSetCount(optionName, count) {
-                console.log(optionName);
-                console.log(count);
+                model.optionSets.map(function (x) {
+                    if (x.optionName === optionName) {
+                        x.count = parseInt(count, 10);
+                    }
+                });
             },
-            updateOptionSetFoosCount: function updateOptionSetFoosCount(optionName, count) {},
+            updateRule: function updateRule(ruleName, value) {
+                model[ruleName] = value;
+            },
+            updateOptionSetNullCount: function updateOptionSetNullCount(optionName, count) {
+                model.optionSets.map(function (x) {
+                    if (x.optionName === optionName) {
+                        x.nullCount = parseInt(count, 10);
+                    }
+                });
+            },
             updateVariantCount: function updateVariantCount(val) {
                 model.variantCount = parseInt(val, 10);
             },
@@ -792,43 +871,51 @@ var configData = {
                 model.oosCount = count <= model.variantCount ? count : model.variantCount;
             },
             generateData: function generateData() {
-                var data = variantGenerator(model);
-                console.log(data);
+                var options = Object.assign({}, model);
+                options.optionSets = model.optionSets.filter(function (x) {
+                    return x.count > 0;
+                });
+                var data = variantGenerator(options);
+                model.variants = data.variants;
+                var optionSets = data.optionSets.map(optionValueToSelectListItem);
+                comp$1.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant);
             }
         };
     },
     view: function view() {
 
         function renderOptionSet(optionSet) {
-            return "\n                <div class=\"option-set\">\n                    <h4>" + optionSet.optionName + " options</h4>\n                    <p>\n                        <label>Count</label>\n                        <input data-change=\"updateOptionSetCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.count + "\" min=\"0\" max=\"30\">\n                    </p>\n                    <p>\n                        <label>foos count</label>\n                        <input data-change=\"updateOptionSetFoosCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.foosCount + "\" min=\"0\" max=\"30\">\n                    </p>\n                </div>\n            ";
+            return "\n                <div class=\"option-set\">\n                    <h4>" + optionSet.optionName + " options</h4>\n                    <p>\n                        <label>Count</label>\n                        <input data-change=\"updateOptionSetCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.count + "\" min=\"0\" max=\"30\">\n                    </p>\n                    <p>\n                        <label>Null count</label>\n                        <input data-change=\"updateOptionSetNullCount(" + optionSet.optionName + ", this.value)\" type=\"number\" value=\"" + optionSet.nullCount + "\" min=\"0\" max=\"30\">\n                    </p>\n                </div>\n            ";
         }
 
-        function renderRadioButtons(listName, item) {
-            return "\n\t            <input name=\"" + listName + "\" value=\"" + item + "\" type=\"radio\" id=\"" + item + "-radio\"/>\n\t            <label for=\"" + item + "-radio\">" + item + "</label>\n            ";
+        function renderRadioButtons(listName, item, defaultValue) {
+            return "\n\t            <input data-change=\"updateRule(this.name, this.value)\" name=\"" + listName + "\" value=\"" + item + "\" type=\"radio\" id=\"" + listName + "-" + item + "-radio\" " + (item === defaultValue ? "checked" : "") + "/>\n\t            <label for=\"" + listName + "-" + item + "-radio\">" + item + "</label>\n            ";
         }
 
         return {
             render: function render(model, html) {
-                return html(_templateObject, model.sectionVisible ? "- Hide data options" : "+ Show data options", model.sectionVisible ? "" : "display: none", model.optionSets.map(renderOptionSet), model.variantCount, model.oosCount, model.variantCount, model.ruleOutOfStock.map(function (x) {
-                    return renderRadioButtons("ruleOutOfStock", x);
-                }), model.ruleNullVariant.map(function (x) {
-                    return renderRadioButtons("ruleOutOfStock", x);
+                return html(_templateObject, model.sectionVisible ? "- Hide data options" : "+ Show data options", model.sectionVisible ? "" : "display: none", model.optionSets.map(renderOptionSet), model.variantCount, model.oosCount, model.variantCount, model.rulesList.map(function (x) {
+                    return renderRadioButtons("ruleOutOfStock", x, model.ruleOutOfStock);
+                }), model.rulesList.map(function (x) {
+                    return renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant);
                 }));
             }
         };
     }
 };
 
-var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button ", ">Buy Now</button>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button ", ">Buy Now</button>\n                    </div>\n                "]);
+var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                    </div>\n                "]);
 
 var demo = {
 
     model: {
-        optionSets: [{ optionName: "Colour", optionValues: [{ name: "cheese", disabled: false, greyedOut: false, excluded: false }, { name: "bread", disabled: true, greyedOut: false, excluded: false }, { name: "wine", disabled: false, greyedOut: true, excluded: false }, { name: "wine", disabled: false, greyedOut: true, excluded: true }]
-        }, { optionName: "Size", optionValues: [] }, { optionName: "Logo", optionValues: [] }],
+        optionSets: [],
+        variants: [],
         selectedOptions: {},
         selectedVariant: null,
-        canBuyNow: false
+        canBuyNow: false,
+        ruleOutOfStock: "",
+        ruleNullVariant: ""
     },
 
     actions: function actions(model) {
@@ -836,6 +923,12 @@ var demo = {
         function extractVariant() {}
 
         return {
+            importData: function importData(optionSets, variants, ruleOutOfStock, ruleNull) {
+                model.optionSets = optionSets;
+                model.variants = variants;
+                model.ruleOutOfStock = ruleOutOfStock;
+                model.ruleNullVariant = ruleNull;
+            },
             selectSelectedOption: function selectSelectedOption(key, value) {
                 model.selectedOptions[key] = value;
                 model.selectedVariant = extractVariant;
@@ -852,9 +945,13 @@ var demo = {
             return "\n                <label>" + optionSet.optionName + "</label>\n                <select name=\"" + optionSet.optionName + "\" data-change=\"selectSelectedOption(" + optionSet.optionName + ", this.value)\">\n                    <option value=\"null\">-Select-</option>\n                    " + (optionSet.optionValues.length > 0 ? optionSet.optionValues.map(renderSelectListItem) : "") + "\n                </select>\n            ";
         }
 
+        function renderVariant(variant) {
+            return variant ? "\n                    <li style=\"" + (variant.quantity === 0 ? "color:red;" : "") + "\">" + variant.sku + " <span>Qty: " + variant.quantity + "</span></li>\n                   " : "";
+        }
+
         return {
             render: function render(model, html) {
-                return html(_templateObject$1, model.optionSets.map(renderOptionSet), model.canBuyNow ? "" : "disabled");
+                return html(_templateObject$1, model.optionSets.map(renderOptionSet), model.canBuyNow ? "" : "disabled", model.variants.length === 0 ? "display:none;" : "", model.variants.map(renderVariant));
             }
         };
     }

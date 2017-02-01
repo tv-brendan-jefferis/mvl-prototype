@@ -1,11 +1,12 @@
 import variantGenerator from "./lib/variant-generator";
+import comp from "comp";
 
 export default {
 	
 	model: {
 	    sectionVisible: true,
 		optionSets: [
-            { optionName: "Colour", count: 3, foosCount: 0, optionValues: [
+            { optionName: "Colour", count: 3, nullCount: 0, optionValues: [
                 "white",
                 "silver",
                 "gray",
@@ -36,7 +37,7 @@ export default {
                 "indigo",
                 "violet",
                 "plum"] },
-            { optionName: "Size", count: 3, foosCount: 0, optionValues: [
+            { optionName: "Size", count: 3, nullCount: 0, optionValues: [
                 "3XS",
                 "2XS",
                 "XS",
@@ -68,7 +69,7 @@ export default {
                 "30",
                 "32"
             ] },
-            { optionName: "Logo", count: 3, foosCount: 0, optionValues: [
+            { optionName: "Logo", count: 3, nullCount: 0, optionValues: [
                 "Boston Bruins",
                 "Buffalo Sabres",
                 "Detroit Red Wings",
@@ -100,26 +101,115 @@ export default {
                 "St. Louis Blues",
                 "Winnipeg Jets"
             ] },
+            { optionName: "Fabric", count: 0, nullCount: 0, optionValues: [
+                "Cotton",
+                "Leather",
+                "Canvas",
+                "Sack-cloth",
+                "Denim",
+                "Satin",
+                "Silk",
+                "Suede",
+                "Crushed velvet",
+                "Velour",
+                "Fishnet",
+                "Flannel",
+                "Wool",
+                "Cheesecloth",
+                "Cashmere",
+                "Gingham",
+                "Horsehair",
+                "Lambswool",
+                "Possum fur",
+                "Feathers",
+                "Moleskin",
+                "Nylon",
+                "Polyester",
+                "Lace",
+                "Ultrasuede",
+                "Wolf pelt",
+                "Spider silk",
+                "Vegan leather",
+                "PVC",
+                "Twill"] },
+            { optionName: "Gull", count: 0, nullCount: 0, optionValues: [
+                "Pacific gull",
+                "Belcher gull",
+                "Olror gull",
+                "Black-tailed gull",
+                "Heermann gull",
+                "Common gull",
+                "Ring-billed gull",
+                "California gull",
+                "Great black-backed gull",
+                "Kelp gull",
+                "Cape gull",
+                "Glaucous-winged gull",
+                "Western gull",
+                "Yellow-footed gull",
+                "Glaucous gull",
+                "Iceland gull",
+                "Kumlien gull",
+                "Thayer gull",
+                "European herring gull",
+                "American herring gull",
+                "Caspian gull",
+                "Yellow-legged gull",
+                "East Siberian herring gull",
+                "Armenian gull",
+                "Slaty-backed gull",
+                "Lesser black-backed gull",
+                "Heuglin gull",
+                "Mediterranean gull",
+                "White-eyed gull",
+                "Sooty gull"
+            ]}
 		],
         variantCount: 5,
-        oosCount: 0,
+        oosCount: 1,
         variants: [],
-        ruleOutOfStock: ["exclude", "disable", "grey-out"],
-        ruleNullVariant: ["exclude", "disable", "grey-out"]
+        rulesList: ["grey-out", "disable", "exclude"],
+        ruleOutOfStock: "grey-out",
+        ruleNullVariant: "grey-out"
 	},
 
 	actions(model) {
+
+	    function optionValueToSelectListItem(optionSet) {
+	        let optionValues = [];
+
+	        for (let i = 0; i < optionSet.optionValues.length; i++) {
+	            optionValues.push({
+	                name: optionSet.optionValues[i]
+                });
+            }
+
+            return {
+                optionName: optionSet.optionName,
+                optionValues: optionValues
+            };
+        }
 
 		return {
             toggleSectionVisible() {
                 model.sectionVisible = !model.sectionVisible;
             },
 		    updateOptionSetCount(optionName, count) {
-                console.log(optionName);
-                console.log(count);
+                model.optionSets.map(x => {
+                    if (x.optionName === optionName) {
+                        x.count = parseInt(count, 10);
+                    }
+                });
             },
-            updateOptionSetFoosCount(optionName, count) {
-
+            updateRule(ruleName, value) {
+                model[ruleName] = value;
+            },
+            updateOptionSetNullCount(optionName, count) {
+                model.optionSets.map(x => {
+                    if (x.optionName === optionName) {
+                        x.nullCount = parseInt(count, 10);
+                    }
+                });
             },
             updateVariantCount(val) {
                 model.variantCount = parseInt(val, 10);
@@ -129,8 +219,12 @@ export default {
 		        model.oosCount = count <= model.variantCount ? count : model.variantCount;
             },
 			generateData() {
-                let data = variantGenerator(model);
-                console.log(data);
+                const options = Object.assign({}, model);
+                options.optionSets = model.optionSets.filter(x => x.count > 0);
+                const data = variantGenerator(options);
+                model.variants = data.variants;
+                let optionSets = data.optionSets.map(optionValueToSelectListItem);
+                comp.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant);
 			} 
 		}
 	},
@@ -146,17 +240,17 @@ export default {
                         <input data-change="updateOptionSetCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.count}" min="0" max="30">
                     </p>
                     <p>
-                        <label>foos count</label>
-                        <input data-change="updateOptionSetFoosCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.foosCount}" min="0" max="30">
+                        <label>Null count</label>
+                        <input data-change="updateOptionSetNullCount(${optionSet.optionName}, this.value)" type="number" value="${optionSet.nullCount}" min="0" max="30">
                     </p>
                 </div>
             `;
         }
 
-        function renderRadioButtons(listName, item) {
+        function renderRadioButtons(listName, item, defaultValue) {
 	        return `
-	            <input name="${listName}" value="${item}" type="radio" id="${item}-radio"/>
-	            <label for="${item}-radio">${item}</label>
+	            <input data-change="updateRule(this.name, this.value)" name="${listName}" value="${item}" type="radio" id="${listName}-${item}-radio" ${item === defaultValue ? "checked": ""}/>
+	            <label for="${listName}-${item}-radio">${item}</label>
             `;
         }
 
@@ -177,7 +271,7 @@ export default {
                                 <input data-change="updateVariantCount(this.value)" type="number" value="${model.variantCount}" min="0" max="150">
                             </p>
                             <p>
-                                <label>oos count</label>
+                                <label>Out of stock count</label>
                                 <input data-change="updateOosCount(this.value)" type="number" value="${model.oosCount}" min="0" max="${model.variantCount}">
                             </p>
                             <hr>
@@ -185,11 +279,11 @@ export default {
                             <div class="option-sets">
                                 <div class="option-set">
                                     <h4>Out of stock</h4>
-                                    ${model.ruleOutOfStock.map(x => renderRadioButtons("ruleOutOfStock", x)) }
+                                    ${model.rulesList.map(x => renderRadioButtons("ruleOutOfStock", x, model.ruleOutOfStock)) }
                                 </div>
                                 <div class="option-set">
                                     <h4>Null variant</h4>
-                                    ${model.ruleNullVariant.map(x => renderRadioButtons("ruleOutOfStock", x)) }
+                                    ${model.rulesList.map(x => renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant)) }
                                 </div>
                             </div>
                             <hr>

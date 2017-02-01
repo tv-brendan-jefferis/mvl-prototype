@@ -1,20 +1,13 @@
 export default {
 
     model: {
-        optionSets: [
-            { optionName: "Colour", optionValues: [
-                    {name: "cheese", disabled: false, greyedOut: false, excluded: false},
-                    {name: "bread", disabled: true, greyedOut: false, excluded: false},
-                    {name: "wine", disabled: false, greyedOut: true, excluded: false},
-                    {name: "wine", disabled: false, greyedOut: true, excluded: true}
-                ]
-            },
-            { optionName: "Size", optionValues: [] },
-            { optionName: "Logo", optionValues: [] }
-        ],
+        optionSets: [],
+        variants: [],
         selectedOptions: {},
         selectedVariant: null,
-        canBuyNow: false
+        canBuyNow: false,
+        ruleOutOfStock: "",
+        ruleNullVariant: ""
     },
 
     actions(model) {
@@ -23,7 +16,39 @@ export default {
 
         }
 
+        function applyRules(ruleSet, option) {
+            switch(ruleSet) {
+                case "grey-out":
+                    option.greyedOut = true;
+                    option.disabled = false;
+                    option.excluded = false;
+                    break;
+
+                case "disable":
+                    option.greyedOut = false;
+                    option.disabled = true;
+                    option.excluded = false;
+                    break;
+
+                case "exclude":
+                    option.greyedOut = false;
+                    option.disabled = false;
+                    option.excluded = true;
+                    break;
+
+                default:
+                    break;
+            }
+            return option;
+        }
+
         return {
+            importData(optionSets, variants, ruleOutOfStock, ruleNull) {
+                model.optionSets = optionSets;
+                model.variants = variants;
+                model.ruleOutOfStock = ruleOutOfStock;
+                model.ruleNullVariant = ruleNull;
+            },
             selectSelectedOption(key, value) {
                 model.selectedOptions[key] = value;
                 model.selectedVariant = extractVariant;
@@ -51,6 +76,14 @@ export default {
             `;
         }
 
+        function renderVariant(variant) {
+            return variant
+                ? `
+                    <li style="${variant.quantity === 0 ? "color:red;" : ""}">${variant.sku} <span>Qty: ${variant.quantity}</span></li>
+                   `
+                : "";
+        }
+
         return {
             render(model, html) {
                 return html`
@@ -61,6 +94,13 @@ export default {
                         </div>
                         <br>
                         <button ${model.canBuyNow ? "" : "disabled"}>Buy Now</button>
+                        <div style="${model.variants.length === 0 ? "display:none;" : ""}">
+                            <br>
+                            <h4>All variants</h4>
+                            <ul>
+                                ${model.variants.map(renderVariant)}
+                            </ul>
+                        </div>
                     </div>
                 `;
             }
