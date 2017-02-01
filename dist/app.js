@@ -721,7 +721,7 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-var variantGenerator = function (options) {
+function variantGenerator(options) {
     var randomSamples = [];
     var variants = [];
     var counter = 0;
@@ -839,7 +839,29 @@ var variantGenerator = function (options) {
         optionSets: optionSets,
         variants: variants
     };
-};
+}
+
+function variantExtractor(selectedOptions) {
+    var propList = Object.keys(selectedOptions);
+    return function (variant) {
+        return propList.map(function (optionName) {
+            return variant.optionValues.find(function (x) {
+                return x.name === optionName;
+            }).value === selectedOptions[optionName];
+        }).every(function (x) {
+            return x === true;
+        });
+    };
+}
+
+function getSelectedOptionsFromVariant(variant) {
+    var options = {};
+    variant.optionValues.map(function (x) {
+        this[x.name] = x.value;
+    }, options);
+
+    return options;
+}
 
 var taggedTemplateLiteral = function (strings, raw) {
   return Object.freeze(Object.defineProperties(strings, {
@@ -966,7 +988,6 @@ var configData = {
 var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                        <div style=\"", "\">\n                            <h4>Selected variant</h4>\n                            <p>", " <span>Qty: ", "</span></p>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                        <div style=\"", "\">\n                            <h4>Selected variant</h4>\n                            <p>", " <span>Qty: ", "</span></p>\n                        </div>\n                    </div>\n                "]);
 
 var demo = {
-
     model: {
         optionSets: [],
         variants: [],
@@ -979,40 +1000,19 @@ var demo = {
 
     actions: function actions(model) {
 
-        function variantExtractor(selectedOptions) {
-            var propList = Object.keys(selectedOptions);
-            return function (variant) {
-                return propList.map(function (optionName) {
-                    return variant.optionValues.find(function (x) {
-                        return x.name === optionName;
-                    }).value === selectedOptions[optionName];
-                }).every(function (x) {
-                    return x === true;
-                });
-            };
-        }
-
-        function getSelectedOptionsFromVariant(variant) {
-            var options = {};
-            variant.optionValues.map(function (x) {
-                this[x.name] = x.value;
-            }, options);
-
-            return options;
-        }
-
         return {
             importData: function importData(optionSets, variants, ruleOutOfStock, ruleNull, preselectOptionsOnLoad, preselectOutOfStock) {
                 model.optionSets = optionSets;
                 model.variants = variants;
                 model.ruleOutOfStock = ruleOutOfStock;
                 model.ruleNullVariant = ruleNull;
-                var preselectedVariant = preselectOutOfStock ? model.variants.find(function (v) {
+                model.selectedVariant = preselectOutOfStock ? model.variants.find(function (v) {
                     return v.quantity === 0;
                 }) : model.variants.find(function (v) {
                     return v.quantity !== 0;
                 });
-                model.selectedOptions = preselectOptionsOnLoad ? getSelectedOptionsFromVariant(preselectedVariant || model.variants[0]) : {};
+                model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock ? getSelectedOptionsFromVariant(model.selectedVariant || model.variants[0]) : {};
+                model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
             },
             selectSelectedOption: function selectSelectedOption(key, value) {
                 model.selectedOptions[key] = value;

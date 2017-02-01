@@ -1,5 +1,6 @@
-export default {
+import { variantExtractor, getSelectedOptionsFromVariant } from "./lib/variant-utils";
 
+export default {
     model: {
         optionSets: [],
         variants: [],
@@ -11,22 +12,6 @@ export default {
     },
 
     actions(model) {
-
-        function variantExtractor(selectedOptions) {
-            const propList = Object.keys(selectedOptions);
-            return variant => {
-                return propList.map(optionName => { return variant.optionValues.find(x => x.name === optionName).value === selectedOptions[optionName]; }).every(x => x === true);
-            }
-        }
-
-        function getSelectedOptionsFromVariant(variant) {
-            let options = {};
-            variant.optionValues.map(function (x) {
-                this[x.name] = x.value;
-            }, options);
-
-            return options;
-        }
 
         function applyRules(ruleSet, option) {
             switch(ruleSet) {
@@ -60,12 +45,13 @@ export default {
                 model.variants = variants;
                 model.ruleOutOfStock = ruleOutOfStock;
                 model.ruleNullVariant = ruleNull;
-                const preselectedVariant = preselectOutOfStock
+                model.selectedVariant = preselectOutOfStock
                     ? model.variants.find(v => v.quantity === 0)
                     : model.variants.find(v => v.quantity !== 0);
-                model.selectedOptions = preselectOptionsOnLoad
-                    ? getSelectedOptionsFromVariant(preselectedVariant || model.variants[0])
+                model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock
+                    ? getSelectedOptionsFromVariant(model.selectedVariant || model.variants[0])
                     : {};
+                model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
             },
             selectSelectedOption(key, value) {
                 model.selectedOptions[key] = value;

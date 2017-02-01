@@ -19,7 +19,7 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-export default function(options) {
+export function variantGenerator(options) {
     let randomSamples = [];
     let variants = [];
     let counter = 0;
@@ -111,4 +111,20 @@ export default function(options) {
         optionSets: optionSets,
         variants: variants
     };
+}
+
+export function variantExtractor(selectedOptions) {
+    const propList = Object.keys(selectedOptions);
+    return variant => {
+        return propList.map(optionName => { return variant.optionValues.find(x => x.name === optionName).value === selectedOptions[optionName]; }).every(x => x === true);
+    }
+}
+
+export function getSelectedOptionsFromVariant(variant) {
+    let options = {};
+    variant.optionValues.map(function (x) {
+        this[x.name] = x.value;
+    }, options);
+
+    return options;
 }

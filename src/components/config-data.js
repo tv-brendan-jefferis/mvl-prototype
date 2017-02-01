@@ -1,4 +1,4 @@
-import variantGenerator from "./lib/variant-generator";
+import { variantGenerator } from "./lib/variant-utils";
 import comp from "comp";
 
 export default {
