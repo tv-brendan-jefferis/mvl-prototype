@@ -705,6 +705,35 @@ function optionValues(o) {
     };
 }
 
+function applyRule(rule, option) {
+    switch (rule) {
+        case "grey-out":
+            option.greyedOut = true;
+            option.disabled = false;
+            option.excluded = false;
+            break;
+
+        case "disable":
+            option.greyedOut = false;
+            option.disabled = true;
+            option.excluded = false;
+            break;
+
+        case "exclude":
+            option.greyedOut = false;
+            option.disabled = false;
+            option.excluded = true;
+            break;
+
+        default:
+            option.greyedOut = false;
+            option.disabled = false;
+            option.excluded = false;
+            break;
+    }
+    return option;
+}
+
 function setRandomOutOfStock(count, variants) {
     var randoms = uniqueRandoms(count, variants.length);
     randoms.map(function (i) {
@@ -721,6 +750,49 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
+function validateCurrentSelection(currentDimension, selectedOptions, variants) {
+    var otherOptions = Object.keys(selectedOptions).filter(function (x) {
+        return selectedOptions[x] !== "" && x !== currentDimension;
+    });
+    var unavailableOptions = [];
+    for (var i = 0; i < otherOptions.length; i++) {
+        var queryOptions = {};
+        queryOptions[currentDimension] = selectedOptions[currentDimension];
+        queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
+        var matchingVariants = variants.filter(variantExtractor(queryOptions));
+        if (matchingVariants.length === 0) {
+            unavailableOptions.push({
+                name: otherOptions[i],
+                value: selectedOptions[otherOptions[i]]
+            });
+        }
+    }
+    return unavailableOptions;
+}
+
+function validateOptionSets(selectedOptions, optionSets, variants, ruleOutOfStock) {
+    var _loop = function _loop(i) {
+        var otherOptions = Object.keys(selectedOptions).filter(function (x) {
+            return selectedOptions[x] !== "" && x !== optionSets[i].optionName;
+        });
+        var queryOptions = {};
+        for (var j = 0; j < otherOptions.length; j++) {
+            queryOptions[otherOptions[j]] = selectedOptions[otherOptions[j]];
+        }
+        for (var _j = 0; _j < optionSets[i].optionValues.length; _j++) {
+            var optValue = optionSets[i].optionValues[_j];
+            queryOptions[optionSets[i].optionName] = optValue.name;
+            var matchingVariants = variants.filter(variantExtractor(queryOptions));
+            applyRule(matchingVariants.length === 0 ? ruleOutOfStock : "", optValue);
+        }
+    };
+
+    for (var i = 0; i < optionSets.length; i++) {
+        _loop(i);
+    }
+    return optionSets;
+}
+
 function variantGenerator(options) {
     var randomSamples = [];
     var variants = [];
@@ -728,7 +800,7 @@ function variantGenerator(options) {
     var usedSkus = {};
     var optionSets = [];
 
-    var _loop = function _loop(i) {
+    var _loop2 = function _loop2(i) {
         var set = options.optionSets[i];
         var randoms = uniqueRandoms(set.count, set.optionValues.length);
         var values = randoms.map(function (i) {
@@ -744,7 +816,7 @@ function variantGenerator(options) {
     };
 
     for (var i = 0; i < options.optionSets.length; i++) {
-        _loop(i);
+        _loop2(i);
     }
 
     for (var i = 0; i < 5000; i++) {
@@ -789,7 +861,7 @@ function variantGenerator(options) {
         variants = setRandomNull(options.nullCount, variants);
     }
 
-    var _loop2 = function _loop2(_i) {
+    var _loop3 = function _loop3(_i) {
         var set = optionSets[_i];
         if (set.nullCount > 0) {
             (function () {
@@ -808,10 +880,10 @@ function variantGenerator(options) {
     };
 
     for (var _i = 0; _i < optionSets.length; _i++) {
-        _loop2(_i);
+        _loop3(_i);
     }
 
-    var _loop3 = function _loop3(_i2) {
+    var _loop4 = function _loop4(_i2) {
         var set = optionSets[_i2];
         if (set.oosCount > 0) {
             (function () {
@@ -832,7 +904,7 @@ function variantGenerator(options) {
     };
 
     for (var _i2 = 0; _i2 < optionSets.length; _i2++) {
-        _loop3(_i2);
+        _loop4(_i2);
     }
 
     return {
@@ -841,11 +913,11 @@ function variantGenerator(options) {
     };
 }
 
-function variantExtractor(selectedOptions) {
-    var propList = Object.keys(selectedOptions);
+function variantExtractor(selectedOptions, propList) {
+    propList = propList ? propList : Object.keys(selectedOptions);
     return function (variant) {
         return propList.map(function (optionName) {
-            return variant.optionValues.find(function (x) {
+            return variant.quantity > 0 && variant.optionValues.find(function (x) {
                 return x.name === optionName;
             }).value === selectedOptions[optionName];
         }).every(function (x) {
@@ -960,6 +1032,7 @@ var configData = {
                 model.variants = data.variants;
                 var optionSets = data.optionSets.map(optionValueToSelectListItem);
                 comp$1.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant, model.preselectOptionsOnLoad, model.preselectOutOfStock);
+                model.sectionVisible = false;
             }
         };
     },
@@ -985,7 +1058,7 @@ var configData = {
     }
 };
 
-var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                        <div style=\"", "\">\n                            <h4>Selected variant</h4>\n                            <p>", " <span>Qty: ", "</span></p>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <div style=\"", "\">\n                            <br>\n                            <h4>All variants</h4>\n                            <ul>\n                                ", "\n                            </ul>\n                        </div>\n                        <div style=\"", "\">\n                            <h4>Selected variant</h4>\n                            <p>", " <span>Qty: ", "</span></p>\n                        </div>\n                    </div>\n                "]);
+var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\" data-click=\"toggleVariantSectionVisible\" style=\"", "\">", "</a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", " <span>Qty: ", "</span></p>\n                            </div>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\" data-click=\"toggleVariantSectionVisible\" style=\"", "\">", "</a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", " <span>Qty: ", "</span></p>\n                            </div>\n                        </div>\n                    </div>\n                "]);
 
 var demo = {
     model: {
@@ -995,10 +1068,33 @@ var demo = {
         selectedVariant: null,
         canBuyNow: false,
         ruleOutOfStock: "",
-        ruleNullVariant: ""
+        ruleNullVariant: "",
+        variantSectionVisible: false
     },
 
     actions: function actions(model) {
+
+        function updateOptionSets(_model, currentDimension) {
+            if (currentDimension) {
+                (function () {
+                    var unavailableOptions = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.variants);
+                    if (unavailableOptions.length > 0) {
+                        var _loop = function _loop(i) {
+                            var set$$1 = _model.optionSets.find(function (s) {
+                                return s.optionName === unavailableOptions[i].name;
+                            });
+                            //set.optionValues.map(o => applyRules(o.name === unavailableOptions[i].value ? "disable" : "", 0));
+                        };
+
+                        for (var i = 0; i < unavailableOptions.length; i++) {
+                            _loop(i);
+                        }
+                    }
+                })();
+            }
+
+            return validateOptionSets(_model.selectedOptions, _model.optionSets, _model.variants, _model.ruleOutOfStock);
+        }
 
         return {
             importData: function importData(optionSets, variants, ruleOutOfStock, ruleNull, preselectOptionsOnLoad, preselectOutOfStock) {
@@ -1012,30 +1108,32 @@ var demo = {
                     return v.quantity !== 0;
                 });
                 model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock ? getSelectedOptionsFromVariant(model.selectedVariant || model.variants[0]) : {};
+                model.optionSets = updateOptionSets(model);
                 model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
             },
-            selectSelectedOption: function selectSelectedOption(key, value) {
+            setSelectedOption: function setSelectedOption(key, value) {
                 model.selectedOptions[key] = value;
+                model.optionSets = updateOptionSets(model, key);
                 if (Object.keys(model.selectedOptions).length === model.variants[0].optionValues.length) {
                     model.selectedVariant = model.variants.find(variantExtractor(model.selectedOptions));
                     model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
-                } else {
-                    // filterOptions
                 }
             },
             buyNow: function buyNow() {
                 alert("Congratulations, you fake bought \r\n" + model.selectedVariant.sku + "\r\n");
+            },
+            toggleVariantSectionVisible: function toggleVariantSectionVisible() {
+                model.variantSectionVisible = !model.variantSectionVisible;
             }
         };
     },
     view: function view() {
-
         function renderSelectListItem(selectedOption, item) {
-            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + " style=\"" + (item.greyedOut ? "color:graytext;" : "") + (item.disabled ? "color:crimson;" : "") + "\" " + (selectedOption === item.name ? "selected" : "") + ">" + item.name + " " + (item.disabled ? "- out of stock" : "") + "</option>\n                ";
+            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + " style=\"" + (item.greyedOut ? "color:graytext;" : "") + (item.disabled ? "color:crimson;" : "") + "\" " + (selectedOption === item.name ? "selected" : "") + ">" + item.name + " " + (item.disabled ? "- unavailable" : "") + "</option>\n                ";
         }
 
         function renderOptionSet(selectedOptions, optionSet) {
-            return "\n                <label>" + optionSet.optionName + "</label>\n                <select name=\"" + optionSet.optionName + "\" data-change=\"selectSelectedOption(" + optionSet.optionName + ", this.value)\">\n                    <option value=\"\">-Select-</option>\n                    " + (optionSet.optionValues.length > 0 ? optionSet.optionValues.map(function (o) {
+            return "\n                <label>" + optionSet.optionName + "</label>\n                <select name=\"" + optionSet.optionName + "\" data-change=\"setSelectedOption(" + optionSet.optionName + ", this.value)\">\n                    <option value=\"\">-Select-</option>\n                    " + (optionSet.optionValues.length > 0 ? optionSet.optionValues.map(function (o) {
                 return renderSelectListItem(selectedOptions[optionSet.optionName], o);
             }) : "") + "\n                </select>\n            ";
         }
@@ -1048,7 +1146,7 @@ var demo = {
             render: function render(model, html) {
                 return html(_templateObject$1, model.optionSets.map(function (o) {
                     return renderOptionSet(model.selectedOptions, o);
-                }), model.canBuyNow ? "" : "disabled", model.variants.length === 0 ? "display:none;" : "", model.variants.map(renderVariant), model.selectedVariant ? "" : "display: none;", model.selectedVariant && model.selectedVariant.sku, model.selectedVariant && model.selectedVariant.quantity);
+                }), model.canBuyNow ? "" : "disabled", model.variants.length === 0 ? "display:none;" : "", model.variantSectionVisible ? "- Hide variants" : "+ Show variants", model.variantSectionVisible ? "" : "display:none;", model.variants.length === 0 ? "display:none;" : "", model.variants.map(renderVariant), model.selectedVariant ? "" : "display: none;", model.selectedVariant && model.selectedVariant.sku, model.selectedVariant && model.selectedVariant.quantity);
             }
         };
     }

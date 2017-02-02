@@ -245,6 +245,7 @@ export default {
                 model.variants = data.variants;
                 let optionSets = data.optionSets.map(optionValueToSelectListItem);
                 comp.components.demo.importData(optionSets, model.variants, model.ruleOutOfStock, model.ruleNullVariant, model.preselectOptionsOnLoad, model.preselectOutOfStock);
+                model.sectionVisible = false;
 			} 
 		}
 	},

@@ -7,6 +7,35 @@ function optionValues(o) {
     };
 }
 
+function applyRule(rule, option) {
+    switch(rule) {
+        case "grey-out":
+            option.greyedOut = true;
+            option.disabled = false;
+            option.excluded = false;
+            break;
+
+        case "disable":
+            option.greyedOut = false;
+            option.disabled = true;
+            option.excluded = false;
+            break;
+
+        case "exclude":
+            option.greyedOut = false;
+            option.disabled = false;
+            option.excluded = true;
+            break;
+
+        default:
+            option.greyedOut = false;
+            option.disabled = false;
+            option.excluded = false;
+            break;
+    }
+    return option;
+}
+
 function setRandomOutOfStock(count, variants) {
     let randoms = uniqueRandoms(count, variants.length);
     randoms.map(i => { variants[i].quantity = 0 });
@@ -17,6 +46,41 @@ function setRandomNull(count, variants) {
     let randoms = uniqueRandoms(count, variants.length);
     variants = variants.filter((v, i) => randoms.indexOf(i) === -1);
     return variants;
+}
+
+export function validateCurrentSelection(currentDimension, selectedOptions, variants) {
+    const otherOptions = Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "" && x !== currentDimension);
+    let unavailableOptions = [];
+    for (let i = 0; i < otherOptions.length; i++) {
+        const queryOptions = {};
+        queryOptions[currentDimension] = selectedOptions[currentDimension];
+        queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
+        const matchingVariants = variants.filter(variantExtractor(queryOptions));
+        if (matchingVariants.length === 0) {
+            unavailableOptions.push({
+                name: otherOptions[i],
+                value: selectedOptions[otherOptions[i]]
+            });
+        }
+    }
+    return unavailableOptions;
+}
+
+export function validateOptionSets(selectedOptions, optionSets, variants, ruleOutOfStock) {
+    for (let i = 0; i < optionSets.length; i++) {
+        const otherOptions = Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "" && x !== optionSets[i].optionName);
+        const queryOptions = {};
+        for (let j = 0; j < otherOptions.length; j ++) {
+            queryOptions[otherOptions[j]] = selectedOptions[otherOptions[j]];
+        }
+        for (let j = 0; j < optionSets[i].optionValues.length; j++ ) {
+            const optValue = optionSets[i].optionValues[j];
+            queryOptions[optionSets[i].optionName] = optValue.name;
+            const matchingVariants = variants.filter(variantExtractor(queryOptions));
+            applyRule(matchingVariants.length === 0 ? ruleOutOfStock : "", optValue);
+        }
+    }
+    return optionSets;
 }
 
 export function variantGenerator(options) {
@@ -113,10 +177,12 @@ export function variantGenerator(options) {
     };
 }
 
-export function variantExtractor(selectedOptions) {
-    const propList = Object.keys(selectedOptions);
+export function variantExtractor(selectedOptions, propList) {
+    propList = propList ? propList : Object.keys(selectedOptions);
     return variant => {
-        return propList.map(optionName => { return variant.optionValues.find(x => x.name === optionName).value === selectedOptions[optionName]; }).every(x => x === true);
+        return propList.map(optionName => {
+            return variant.quantity > 0 && variant.optionValues.find(x => x.name === optionName).value === selectedOptions[optionName];
+        }).every(x => x === true);
     }
 }
 
