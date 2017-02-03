@@ -750,24 +750,39 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-function validateCurrentSelection(currentDimension, selectedOptions, variants) {
+function validateCurrentSelection(currentDimension, selectedOptions, optionSets, variants) {
+    var currentSelectionUnavailable = {};
+
+    if (Object.keys(selectedOptions).filter(function (x) {
+        return selectedOptions[x] !== "";
+    }).length === optionSets.length) {
+        var variant = variants.find(variantExtractor(selectedOptions));
+        if (!variant) {
+            currentSelectionUnavailable = Object.assign({}, selectedOptions);
+            Object.keys(currentSelectionUnavailable).map(function (o) {
+                return currentSelectionUnavailable[o] = true;
+            });
+            return currentSelectionUnavailable;
+        }
+    }
+
+    if (!currentDimension) {
+        return {};
+    }
+
     var otherOptions = Object.keys(selectedOptions).filter(function (x) {
         return selectedOptions[x] !== "" && x !== currentDimension;
     });
-    var unavailableOptions = [];
     for (var i = 0; i < otherOptions.length; i++) {
         var queryOptions = {};
-        queryOptions[currentDimension] = selectedOptions[currentDimension];
+        if (selectedOptions[currentDimension] !== "") {
+            queryOptions[currentDimension] = selectedOptions[currentDimension];
+        }
         queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
         var matchingVariants = variants.filter(variantExtractor(queryOptions));
-        if (matchingVariants.length === 0) {
-            unavailableOptions.push({
-                name: otherOptions[i],
-                value: selectedOptions[otherOptions[i]]
-            });
-        }
+        currentSelectionUnavailable[otherOptions[i]] = matchingVariants.length === 0;
     }
-    return unavailableOptions;
+    return currentSelectionUnavailable;
 }
 
 function validateOptionSets(selectedOptions, optionSets, variants, ruleOutOfStock) {
@@ -943,7 +958,7 @@ var taggedTemplateLiteral = function (strings, raw) {
   }));
 };
 
-var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <input type=\"checkbox\" data-change=\"setPreselectOptions(this.checked)\" id=\"preselect-options\" ", ">\n                            <label for=\"preselect-options\">Pre-select options on load</label>\n                            <input type=\"checkbox\" data-change=\"setPreselectOutOfStock(this.checked)\" id=\"preselect-out-of-stock\" ", ">\n                            <label for=\"preselect-out-of-stock\">Pre-select out of stock variant</label>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                                <div class=\"option-set\">\n                                    <h4>Null variant</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <input type=\"checkbox\" data-change=\"setPreselectOptions(this.checked)\" id=\"preselect-options\" ", ">\n                            <label for=\"preselect-options\">Pre-select options on load</label>\n                            <input type=\"checkbox\" data-change=\"setPreselectOutOfStock(this.checked)\" id=\"preselect-out-of-stock\" ", ">\n                            <label for=\"preselect-out-of-stock\">Pre-select out of stock variant</label>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
+var _templateObject = taggedTemplateLiteral(["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <input type=\"checkbox\" data-change=\"setPreselectOptions(this.checked)\" id=\"preselect-options\" ", ">\n                            <label for=\"preselect-options\">Pre-select options on load</label>\n                            <input type=\"checkbox\" data-change=\"setPreselectOutOfStock(this.checked)\" id=\"preselect-out-of-stock\" ", ">\n                            <label for=\"preselect-out-of-stock\">Pre-select out of stock variant</label>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"], ["\n                    <div>\n                        <a href=\"#\" data-click=\"toggleSectionVisible\">", "</a>\n                        \n                        <div style=\"", "\">\n                            <h2>Data</h2>\n                            <div class=\"option-sets\">\n                                ", "\n                            </div>\n                            <br>\n                            <p>\n                                <label>Variant count</label>\n                                <input data-change=\"updateVariantCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"150\">\n                            </p>\n                            <p>\n                                <label>Random out of stock variants</label>\n                                <input data-change=\"updateOosCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <p>\n                                <label>Random null variants</label>\n                                <input data-change=\"updateNullCount(this.value)\" type=\"number\" value=\"", "\" min=\"0\" max=\"", "\">\n                            </p>\n                            <hr>\n                            <h2>Rules</h2>\n                            <div class=\"option-sets\">\n                                <div class=\"option-set\">\n                                    <h4>Out of stock</h4>\n                                    ", "\n                                </div>\n                            </div>\n                            <input type=\"checkbox\" data-change=\"setPreselectOptions(this.checked)\" id=\"preselect-options\" ", ">\n                            <label for=\"preselect-options\">Pre-select options on load</label>\n                            <input type=\"checkbox\" data-change=\"setPreselectOutOfStock(this.checked)\" id=\"preselect-out-of-stock\" ", ">\n                            <label for=\"preselect-out-of-stock\">Pre-select out of stock variant</label>\n                            <hr>\n                            <button data-click=\"generateData\" type=\"button\">Generate data</button>\n                        </div>\n                    </div>\n\t\t\t\t"]);
 
 var configData = {
 
@@ -956,7 +971,6 @@ var configData = {
         variants: [],
         rulesList: ["grey-out", "disable", "exclude"],
         ruleOutOfStock: "grey-out",
-        ruleNullVariant: "grey-out",
         preselectOptionsOnLoad: true,
         preselectOutOfStock: false
     },
@@ -1050,15 +1064,13 @@ var configData = {
             render: function render(model, html) {
                 return html(_templateObject, model.sectionVisible ? "- Hide data options" : "+ Show data options", model.sectionVisible ? "" : "display: none", model.optionSets.map(renderOptionSet), model.variantCount, model.oosCount, model.variantCount, model.nullCount, model.variantCount, model.rulesList.map(function (x) {
                     return renderRadioButtons("ruleOutOfStock", x, model.ruleOutOfStock);
-                }), model.rulesList.map(function (x) {
-                    return renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant);
                 }), model.preselectOptionsOnLoad ? "checked" : "", model.preselectOutOfStock ? "checked" : "");
             }
         };
     }
 };
 
-var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\" data-click=\"toggleVariantSectionVisible\" style=\"", "\">", "</a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", " <span>Qty: ", "</span></p>\n                            </div>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\" data-click=\"toggleVariantSectionVisible\" style=\"", "\">", "</a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", " <span>Qty: ", "</span></p>\n                            </div>\n                        </div>\n                    </div>\n                "]);
+var _templateObject$1 = taggedTemplateLiteral(["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\"\n                            data-click=\"toggleVariantSectionVisible\"\n                            style=\"", "\">\n                            ", "\n                        </a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", "\n                                    <span>Qty: ", "</span>\n                                </p>\n                            </div>\n                        </div>\n                    </div>\n                "], ["\n                    <div>\n                        <h2>Demo</h2>\n                        <div class=\"option-sets\">\n                            ", "                        \n                        </div>\n                        <br>\n                        <button data-click=\"buyNow\" ", ">Buy Now</button>\n                        <br>\n                        <br>\n                        <a href=\"#\"\n                            data-click=\"toggleVariantSectionVisible\"\n                            style=\"", "\">\n                            ", "\n                        </a>\n                        <div style=\"", "\">\n                            <div style=\"", "\">\n                                <br>\n                                <h4>All variants</h4>\n                                <ul>\n                                    ", "\n                                </ul>\n                            </div>\n                            <div style=\"", "\">\n                                <h4>Selected variant</h4>\n                                <p>", "\n                                    <span>Qty: ", "</span>\n                                </p>\n                            </div>\n                        </div>\n                    </div>\n                "]);
 
 var demo = {
     model: {
@@ -1069,30 +1081,14 @@ var demo = {
         canBuyNow: false,
         ruleOutOfStock: "",
         ruleNullVariant: "",
-        variantSectionVisible: false
+        variantSectionVisible: false,
+        currentSelectionUnavailable: {}
     },
 
     actions: function actions(model) {
 
         function updateOptionSets(_model, currentDimension) {
-            if (currentDimension) {
-                (function () {
-                    var unavailableOptions = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.variants);
-                    if (unavailableOptions.length > 0) {
-                        var _loop = function _loop(i) {
-                            var set$$1 = _model.optionSets.find(function (s) {
-                                return s.optionName === unavailableOptions[i].name;
-                            });
-                            //set.optionValues.map(o => applyRules(o.name === unavailableOptions[i].value ? "disable" : "", 0));
-                        };
-
-                        for (var i = 0; i < unavailableOptions.length; i++) {
-                            _loop(i);
-                        }
-                    }
-                })();
-            }
-
+            model.currentSelectionUnavailable = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.optionSets, _model.variants);
             return validateOptionSets(_model.selectedOptions, _model.optionSets, _model.variants, _model.ruleOutOfStock);
         }
 
@@ -1107,7 +1103,9 @@ var demo = {
                 }) : model.variants.find(function (v) {
                     return v.quantity !== 0;
                 });
-                model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock ? getSelectedOptionsFromVariant(model.selectedVariant || model.variants[0]) : {};
+                if (model.selectedVariant) {
+                    model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock ? getSelectedOptionsFromVariant(model.selectedVariant) : {};
+                }
                 model.optionSets = updateOptionSets(model);
                 model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
             },
@@ -1129,23 +1127,29 @@ var demo = {
     },
     view: function view() {
         function renderSelectListItem(selectedOption, item) {
-            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + " style=\"" + (item.greyedOut ? "color:graytext;" : "") + (item.disabled ? "color:crimson;" : "") + "\" " + (selectedOption === item.name ? "selected" : "") + ">" + item.name + " " + (item.disabled ? "- unavailable" : "") + "</option>\n                ";
+            var className = item.greyedOut || item.disabled ? "unavailable" : "";
+            if (item.greyedOut) {
+                className += "greyed-out";
+            } else if (item.disabled) {
+                className += "disabled";
+            }
+            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + "\n                        class=\"" + className + "\"\n                        style=\"" + (item.greyedOut ? "color:#aaa;" : "") + (item.disabled ? "color:crimson;" : "") + "\"\n                        " + (selectedOption === item.name ? "selected" : "") + ">\n                        " + item.name + " " + (item.disabled ? "- unavailable" : "") + "\n                    </option>\n                ";
         }
 
-        function renderOptionSet(selectedOptions, optionSet) {
-            return "\n                <label>" + optionSet.optionName + "</label>\n                <select name=\"" + optionSet.optionName + "\" data-change=\"setSelectedOption(" + optionSet.optionName + ", this.value)\">\n                    <option value=\"\">-Select-</option>\n                    " + (optionSet.optionValues.length > 0 ? optionSet.optionValues.map(function (o) {
+        function renderOptionSet(selectedOptions, optionSet, currentSelectionUnavailable) {
+            return "\n                <label>" + optionSet.optionName + "</label>\n                <select name=\"" + optionSet.optionName + "\"\n                    data-change=\"setSelectedOption(" + optionSet.optionName + ", this.value)\"\n                    style=\"" + (currentSelectionUnavailable[optionSet.optionName] ? "text-decoration:line-through;" : "") + "\">\n                    <option value=\"\">-Select-</option>\n                    " + (optionSet.optionValues.length > 0 ? optionSet.optionValues.map(function (o) {
                 return renderSelectListItem(selectedOptions[optionSet.optionName], o);
             }) : "") + "\n                </select>\n            ";
         }
 
         function renderVariant(variant) {
-            return variant ? "\n                    <li style=\"" + (variant.quantity === 0 ? "color:red;" : "") + "\">" + variant.sku + " <span>Qty: " + variant.quantity + "</span></li>\n                   " : "";
+            return variant ? "\n                    <li style=\"" + (variant.quantity === 0 ? "color:red;" : "") + "\">\n                        " + variant.sku + " \n                        <span>Qty: " + variant.quantity + "</span>\n                    </li>\n                   " : "";
         }
 
         return {
             render: function render(model, html) {
                 return html(_templateObject$1, model.optionSets.map(function (o) {
-                    return renderOptionSet(model.selectedOptions, o);
+                    return renderOptionSet(model.selectedOptions, o, model.currentSelectionUnavailable);
                 }), model.canBuyNow ? "" : "disabled", model.variants.length === 0 ? "display:none;" : "", model.variantSectionVisible ? "- Hide variants" : "+ Show variants", model.variantSectionVisible ? "" : "display:none;", model.variants.length === 0 ? "display:none;" : "", model.variants.map(renderVariant), model.selectedVariant ? "" : "display: none;", model.selectedVariant && model.selectedVariant.sku, model.selectedVariant && model.selectedVariant.quantity);
             }
         };

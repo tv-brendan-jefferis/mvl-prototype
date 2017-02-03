@@ -9,22 +9,14 @@ export default {
         canBuyNow: false,
         ruleOutOfStock: "",
         ruleNullVariant: "",
-        variantSectionVisible: false
+        variantSectionVisible: false,
+        currentSelectionUnavailable: {}
     },
 
     actions(model) {
 
         function updateOptionSets(_model, currentDimension) {
-            if (currentDimension) {
-                const unavailableOptions = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.variants);
-                if (unavailableOptions.length > 0) {
-                    for (let i = 0; i < unavailableOptions.length; i++) {
-                        const set = _model.optionSets.find(s => s.optionName === unavailableOptions[i].name);
-                        //set.optionValues.map(o => applyRules(o.name === unavailableOptions[i].value ? "disable" : "", 0));
-                    }
-                }
-            }
-
+            model.currentSelectionUnavailable = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.optionSets, _model.variants);
             return validateOptionSets(_model.selectedOptions, _model.optionSets, _model.variants, _model.ruleOutOfStock);
         }
 
@@ -37,9 +29,11 @@ export default {
                 model.selectedVariant = preselectOutOfStock
                     ? model.variants.find(v => v.quantity === 0)
                     : model.variants.find(v => v.quantity !== 0);
-                model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock
-                    ? getSelectedOptionsFromVariant(model.selectedVariant || model.variants[0])
-                    : {};
+                if (model.selectedVariant) {
+                    model.selectedOptions = preselectOptionsOnLoad || preselectOutOfStock
+                        ? getSelectedOptionsFromVariant(model.selectedVariant)
+                        : {};
+                }
                 model.optionSets = updateOptionSets(model);
                 model.canBuyNow = model.selectedVariant && model.selectedVariant.quantity > 0;
             },
@@ -62,19 +56,34 @@ export default {
 
     view() {
         function renderSelectListItem(selectedOption, item) {
+            let className = item.greyedOut || item.disabled ? "unavailable" : "";
+            if (item.greyedOut) {
+                className += "greyed-out";
+            } else if (item.disabled) {
+                className += "disabled";
+            }
             return item.excluded
                 ? ""
                 : `
-                    <option value="${item.name}" ${item.disabled ? "disabled" : ""} style="${item.greyedOut ? "color:graytext;": ""}${item.disabled ? "color:crimson;": ""}" ${selectedOption === item.name ? "selected" : ""}>${item.name} ${item.disabled ? "- unavailable" : ""}</option>
+                    <option value="${item.name}" ${item.disabled ? "disabled" : ""}
+                        class="${className}"
+                        style="${item.greyedOut ? "color:#aaa;": ""}${item.disabled ? "color:crimson;": ""}"
+                        ${selectedOption === item.name ? "selected" : ""}>
+                        ${item.name} ${item.disabled ? "- unavailable" : ""}
+                    </option>
                 `;
         }
 
-        function renderOptionSet(selectedOptions, optionSet) {
+        function renderOptionSet(selectedOptions, optionSet, currentSelectionUnavailable) {
             return `
                 <label>${optionSet.optionName}</label>
-                <select name="${optionSet.optionName}" data-change="setSelectedOption(${optionSet.optionName}, this.value)">
+                <select name="${optionSet.optionName}"
+                    data-change="setSelectedOption(${optionSet.optionName}, this.value)"
+                    style="${currentSelectionUnavailable[optionSet.optionName] ? "text-decoration:line-through;" : ""}">
                     <option value="">-Select-</option>
-                    ${optionSet.optionValues.length > 0 ? optionSet.optionValues.map(o => renderSelectListItem(selectedOptions[optionSet.optionName], o)) : ""}
+                    ${optionSet.optionValues.length > 0
+                        ? optionSet.optionValues.map(o => renderSelectListItem(selectedOptions[optionSet.optionName], o))
+                        : ""}
                 </select>
             `;
         }
@@ -82,7 +91,10 @@ export default {
         function renderVariant(variant) {
             return variant
                 ? `
-                    <li style="${variant.quantity === 0 ? "color:red;" : ""}">${variant.sku} <span>Qty: ${variant.quantity}</span></li>
+                    <li style="${variant.quantity === 0 ? "color:red;" : ""}">
+                        ${variant.sku} 
+                        <span>Qty: ${variant.quantity}</span>
+                    </li>
                    `
                 : "";
         }
@@ -93,13 +105,17 @@ export default {
                     <div>
                         <h2>Demo</h2>
                         <div class="option-sets">
-                            ${model.optionSets.map(o => renderOptionSet(model.selectedOptions, o))}                        
+                            ${model.optionSets.map(o => renderOptionSet(model.selectedOptions, o, model.currentSelectionUnavailable))}                        
                         </div>
                         <br>
                         <button data-click="buyNow" ${model.canBuyNow ? "" : "disabled"}>Buy Now</button>
                         <br>
                         <br>
-                        <a href="#" data-click="toggleVariantSectionVisible" style="${model.variants.length === 0 ? "display:none;" : ""}">${model.variantSectionVisible ? `- Hide variants` : `+ Show variants`}</a>
+                        <a href="#"
+                            data-click="toggleVariantSectionVisible"
+                            style="${model.variants.length === 0 ? "display:none;" : ""}">
+                            ${model.variantSectionVisible ? `- Hide variants` : `+ Show variants`}
+                        </a>
                         <div style="${model.variantSectionVisible ? "" : "display:none;"}">
                             <div style="${model.variants.length === 0 ? "display:none;" : ""}">
                                 <br>
@@ -110,7 +126,9 @@ export default {
                             </div>
                             <div style="${model.selectedVariant ? "" : "display: none;"}">
                                 <h4>Selected variant</h4>
-                                <p>${model.selectedVariant && model.selectedVariant.sku} <span>Qty: ${model.selectedVariant && model.selectedVariant.quantity}</span></p>
+                                <p>${model.selectedVariant && model.selectedVariant.sku}
+                                    <span>Qty: ${model.selectedVariant && model.selectedVariant.quantity}</span>
+                                </p>
                             </div>
                         </div>
                     </div>

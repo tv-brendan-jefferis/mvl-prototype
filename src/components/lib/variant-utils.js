@@ -48,22 +48,33 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-export function validateCurrentSelection(currentDimension, selectedOptions, variants) {
-    const otherOptions = Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "" && x !== currentDimension);
-    let unavailableOptions = [];
-    for (let i = 0; i < otherOptions.length; i++) {
-        const queryOptions = {};
-        queryOptions[currentDimension] = selectedOptions[currentDimension];
-        queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
-        const matchingVariants = variants.filter(variantExtractor(queryOptions));
-        if (matchingVariants.length === 0) {
-            unavailableOptions.push({
-                name: otherOptions[i],
-                value: selectedOptions[otherOptions[i]]
-            });
+export function validateCurrentSelection(currentDimension, selectedOptions, optionSets, variants) {
+    let currentSelectionUnavailable = {};
+
+    if (Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "").length === optionSets.length) {
+        const variant = variants.find(variantExtractor(selectedOptions));
+        if (!variant) {
+            currentSelectionUnavailable = Object.assign({}, selectedOptions);
+            Object.keys(currentSelectionUnavailable).map(o => currentSelectionUnavailable[o] = true);
+            return currentSelectionUnavailable;
         }
     }
-    return unavailableOptions;
+
+    if (!currentDimension) {
+        return {};
+    }
+
+    const otherOptions = Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "" && x !== currentDimension);
+    for (let i = 0; i < otherOptions.length; i++) {
+        const queryOptions = {};
+        if (selectedOptions[currentDimension] !== "") {
+            queryOptions[currentDimension] = selectedOptions[currentDimension];
+        }
+        queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
+        const matchingVariants = variants.filter(variantExtractor(queryOptions));
+        currentSelectionUnavailable[otherOptions[i]] = matchingVariants.length === 0;
+    }
+    return currentSelectionUnavailable;
 }
 
 export function validateOptionSets(selectedOptions, optionSets, variants, ruleOutOfStock) {

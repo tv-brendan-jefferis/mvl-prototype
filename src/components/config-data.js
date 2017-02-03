@@ -171,7 +171,6 @@ export default {
         variants: [],
         rulesList: ["grey-out", "disable", "exclude"],
         ruleOutOfStock: "grey-out",
-        ruleNullVariant: "grey-out",
         preselectOptionsOnLoad: true,
         preselectOutOfStock: false
 	},
@@ -309,10 +308,6 @@ export default {
                                 <div class="option-set">
                                     <h4>Out of stock</h4>
                                     ${model.rulesList.map(x => renderRadioButtons("ruleOutOfStock", x, model.ruleOutOfStock)) }
-                                </div>
-                                <div class="option-set">
-                                    <h4>Null variant</h4>
-                                    ${model.rulesList.map(x => renderRadioButtons("ruleNullVariant", x, model.ruleNullVariant)) }
                                 </div>
                             </div>
                             <input type="checkbox" data-change="setPreselectOptions(this.checked)" id="preselect-options" ${model.preselectOptionsOnLoad ? "checked" : ""}>
