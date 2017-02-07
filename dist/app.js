@@ -750,12 +750,11 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-function validateCurrentSelection(currentDimension, selectedOptions, optionSets, variants) {
+function validateCurrentSelection(currentDimension, selectedOptions, variants) {
     var currentSelectionUnavailable = {};
 
-    if (Object.keys(selectedOptions).filter(function (x) {
-        return selectedOptions[x] !== "";
-    }).length === optionSets.length) {
+    // Assess all selected options (e.g., on page load)
+    if (!currentDimension) {
         var variant = variants.find(variantExtractor(selectedOptions));
         if (!variant) {
             currentSelectionUnavailable = Object.assign({}, selectedOptions);
@@ -763,25 +762,29 @@ function validateCurrentSelection(currentDimension, selectedOptions, optionSets,
                 return currentSelectionUnavailable[o] = true;
             });
             return currentSelectionUnavailable;
+        } else {
+            return {};
         }
     }
 
-    if (!currentDimension) {
-        return {};
+    var queryOptions = {};
+    // Assess currently selected option in isolation first...
+    if (selectedOptions[currentDimension] !== "") {
+        queryOptions[currentDimension] = selectedOptions[currentDimension];
+        var matchingVariants = variants.filter(variantExtractor(queryOptions));
+        currentSelectionUnavailable[currentDimension] = matchingVariants.length === 0;
     }
 
+    // ... then compare against other selected options one at a time
     var otherOptions = Object.keys(selectedOptions).filter(function (x) {
         return selectedOptions[x] !== "" && x !== currentDimension;
     });
     for (var i = 0; i < otherOptions.length; i++) {
-        var queryOptions = {};
-        if (selectedOptions[currentDimension] !== "") {
-            queryOptions[currentDimension] = selectedOptions[currentDimension];
-        }
         queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
-        var matchingVariants = variants.filter(variantExtractor(queryOptions));
-        currentSelectionUnavailable[otherOptions[i]] = matchingVariants.length === 0;
+        var _matchingVariants = variants.filter(variantExtractor(queryOptions));
+        currentSelectionUnavailable[otherOptions[i]] = _matchingVariants.length === 0;
     }
+
     return currentSelectionUnavailable;
 }
 
@@ -1088,12 +1091,13 @@ var demo = {
     actions: function actions(model) {
 
         function updateOptionSets(_model, currentDimension) {
-            model.currentSelectionUnavailable = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.optionSets, _model.variants);
+            model.currentSelectionUnavailable = model.ruleOutOfStock !== "exclude" && validateCurrentSelection(currentDimension, _model.selectedOptions, _model.variants);
             return validateOptionSets(_model.selectedOptions, _model.optionSets, _model.variants, _model.ruleOutOfStock);
         }
 
         return {
             importData: function importData(optionSets, variants, ruleOutOfStock, ruleNull, preselectOptionsOnLoad, preselectOutOfStock) {
+                model.selectedOptions = {};
                 model.optionSets = optionSets;
                 model.variants = variants;
                 model.ruleOutOfStock = ruleOutOfStock;
@@ -1127,13 +1131,13 @@ var demo = {
     },
     view: function view() {
         function renderSelectListItem(selectedOption, item) {
-            var className = item.greyedOut || item.disabled ? "unavailable" : "";
+            var className = item.greyedOut || item.disabled ? "unavailable " : "";
             if (item.greyedOut) {
                 className += "greyed-out";
             } else if (item.disabled) {
                 className += "disabled";
             }
-            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + "\n                        class=\"" + className + "\"\n                        style=\"" + (item.greyedOut ? "color:#aaa;" : "") + (item.disabled ? "color:crimson;" : "") + "\"\n                        " + (selectedOption === item.name ? "selected" : "") + ">\n                        " + item.name + " " + (item.disabled ? "- unavailable" : "") + "\n                    </option>\n                ";
+            return item.excluded ? "" : "\n                    <option value=\"" + item.name + "\" " + (item.disabled ? "disabled" : "") + "\n                        class=\"" + className + "\"\n                        style=\"" + (item.greyedOut ? "color:#aaa;" : "") + (item.disabled ? "color:crimson;" : "") + "\"\n                        " + (selectedOption === item.name ? "selected" : "") + ">\n                        " + item.name + "\n                    </option>\n                ";
         }
 
         function renderOptionSet(selectedOptions, optionSet, currentSelectionUnavailable) {

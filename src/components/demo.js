@@ -16,12 +16,13 @@ export default {
     actions(model) {
 
         function updateOptionSets(_model, currentDimension) {
-            model.currentSelectionUnavailable = validateCurrentSelection(currentDimension, _model.selectedOptions, _model.optionSets, _model.variants);
+            model.currentSelectionUnavailable = model.ruleOutOfStock !== "exclude" &&  validateCurrentSelection(currentDimension, _model.selectedOptions, _model.variants);
             return validateOptionSets(_model.selectedOptions, _model.optionSets, _model.variants, _model.ruleOutOfStock);
         }
 
         return {
             importData(optionSets, variants, ruleOutOfStock, ruleNull, preselectOptionsOnLoad, preselectOutOfStock) {
+                model.selectedOptions = {};
                 model.optionSets = optionSets;
                 model.variants = variants;
                 model.ruleOutOfStock = ruleOutOfStock;
@@ -56,7 +57,7 @@ export default {
 
     view() {
         function renderSelectListItem(selectedOption, item) {
-            let className = item.greyedOut || item.disabled ? "unavailable" : "";
+            let className = item.greyedOut || item.disabled ? "unavailable " : "";
             if (item.greyedOut) {
                 className += "greyed-out";
             } else if (item.disabled) {
@@ -69,7 +70,7 @@ export default {
                         class="${className}"
                         style="${item.greyedOut ? "color:#aaa;": ""}${item.disabled ? "color:crimson;": ""}"
                         ${selectedOption === item.name ? "selected" : ""}>
-                        ${item.name} ${item.disabled ? "- unavailable" : ""}
+                        ${item.name}
                     </option>
                 `;
         }

@@ -48,32 +48,37 @@ function setRandomNull(count, variants) {
     return variants;
 }
 
-export function validateCurrentSelection(currentDimension, selectedOptions, optionSets, variants) {
+export function validateCurrentSelection(currentDimension, selectedOptions, variants) {
     let currentSelectionUnavailable = {};
 
-    if (Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "").length === optionSets.length) {
+    // Assess all selected options (e.g., on page load)
+    if (!currentDimension) {
         const variant = variants.find(variantExtractor(selectedOptions));
         if (!variant) {
             currentSelectionUnavailable = Object.assign({}, selectedOptions);
             Object.keys(currentSelectionUnavailable).map(o => currentSelectionUnavailable[o] = true);
             return currentSelectionUnavailable;
+        } else {
+            return {};
         }
     }
 
-    if (!currentDimension) {
-        return {};
+    const queryOptions = {};
+    // Assess currently selected option in isolation first...
+    if (selectedOptions[currentDimension] !== "") {
+        queryOptions[currentDimension] = selectedOptions[currentDimension];
+        const matchingVariants = variants.filter(variantExtractor(queryOptions));
+        currentSelectionUnavailable[currentDimension] = matchingVariants.length === 0;
     }
 
+    // ... then compare against other selected options one at a time
     const otherOptions = Object.keys(selectedOptions).filter(x => selectedOptions[x] !== "" && x !== currentDimension);
     for (let i = 0; i < otherOptions.length; i++) {
-        const queryOptions = {};
-        if (selectedOptions[currentDimension] !== "") {
-            queryOptions[currentDimension] = selectedOptions[currentDimension];
-        }
         queryOptions[otherOptions[i]] = selectedOptions[otherOptions[i]];
         const matchingVariants = variants.filter(variantExtractor(queryOptions));
         currentSelectionUnavailable[otherOptions[i]] = matchingVariants.length === 0;
     }
+
     return currentSelectionUnavailable;
 }
 
